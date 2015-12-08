@@ -1,0 +1,377 @@
+﻿<h2 class="text-center">Picture Album</h2>
+<div class="container">
+    <div class="col-md-4" style="background-color: lightsteelblue;">
+        <table id="albumTable" style="width:100%;" class="table table-responsive table-condensed text-center">  
+                <tr >
+                    <th class="text-center" colspan="3">List of Albums</th>
+                    <th style="padding:0px"></th>
+                    <th style="padding:0px"></th>
+                </tr>
+        </table>
+        <div>
+            <h4>Add Album</h4>
+            <form id="addAlbumForm" class="form-inline text-center" style="margin:8px">
+                <input id="albumName" type="text" class="form-control" style="width:70%"/>
+                <input type="submit" class="btn btn-primary" value="Submit" style="width:25%" />
+            </form>
+        </div>
+    </div>
+    <div class="col-md-8 text-center" style="overflow:auto;">
+        <div id="uploadPicForm" hidden style="float:right">
+            <span class="btn btn-success fileinput-button">
+                <i class="glyphicon glyphicon-plus"></i>
+                <span>Add Images</span>
+                <input id="fileupload" type="file" name="files[]" multiple accept="image/*">
+            </span>
+            <br />
+            <div class="progress" hidden>
+                <div class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: 0%;">
+                    <span class="sr-only">0% complete</span>
+                </div>
+            </div>
+        </div>
+        <h3 id="albumHeading" class="text-center"></h3>
+        
+        <br />
+        <div class="container">
+            <div id="links" />
+        </div>
+
+        <div id="blueimp-gallery" class="blueimp-gallery">
+            <!-- The container for the modal slides -->
+            <div class="slides"></div>
+            <!-- Controls for the borderless lightbox -->
+            <h3 class="title"></h3>
+            <a class="prev">‹</a>
+            <a class="next">›</a>
+            <a class="close">×</a>
+            <a class="play-pause"></a>
+            <ol class="indicator"></ol>
+            <!-- The modal dialog, which will be used to wrap the lightbox content -->
+            <div class="modal fade">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header text-center">
+                            <button type="button" class="close" aria-hidden="true">&times;</button>
+                            <h4 class="modal-title" name="name"></h4>
+                            <form name="name" hidden class="form-horizontal">
+                                <input type="text" id="text-field" />
+                                <input type="submit" class="btn-primary" />
+                            </form>
+                            <h5 name="location" class="location-heading"></h5>
+
+                        </div>
+                        <div class="modal-body next"></div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-default pull-left prev">
+                                <i class="glyphicon glyphicon-chevron-left"></i>
+                                Previous
+                            </button>
+                            <button type="button" class="btn btn-primary next">
+                                Next
+                                <i class="glyphicon glyphicon-chevron-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@section scripts{
+    <script>
+
+
+        $('body').on("click", ":header[header-id]", function () {
+            //console.log("Click!", $(this).attr("header-id"));
+            var id = $(this).attr("header-id");
+            $(this).hide();
+            var form = $(this).siblings("form[name='name']");
+            form.attr("name-form-id", id);
+            form.children("#text-field").attr("value", $(this).text());
+            form.show();
+            form.on("submit", function () {
+                console.log("Submit!");
+                submitNameForm(id, form.children("#text-field").val());
+                return false;
+            });
+        });
+
+        function submitNameForm(id, name) {
+
+            var pic = {
+                Name: name,
+                Id: id
+            }
+
+            console.log("The new name is, ", name);
+
+            $.ajax({
+                url: '/Home/EditPictureName',
+                contentType: 'application/json',
+                method: 'post',
+                data: JSON.stringify(pic)
+            }).done(function () {
+                var form = $('form[name-form-id="' + id + '"]').hide();
+                var header = form.siblings(":header[name='name']");
+                header.text(name);
+                console.log("Header text is ", header.text());
+                header.show();
+                return false;
+            }).error(function (error) {
+                console.log(error);
+            });
+        }
+
+        $(document).ready(function () {
+            $.ajax({
+                url: '/Home/Albums',
+                dataType: 'json',
+                method: 'GET'
+            }).done(function (albums) {
+                console.log(albums);
+                $.each(albums, function (idx, album) {
+                    var html = loadAlbumItem(album);
+                    $("#albumTable").append(html);
+                });
+            }).error(function (error) {
+                console.log(error);
+            });
+        });
+
+
+        $("#addAlbumForm").on("submit", function () {
+            addAlbum($("#albumName").val());
+            $("#albumName").val("");
+            return false;
+        });
+
+        function addAlbum(name) {
+            if (name == null) {
+                return false;
+            }
+
+            var album = { Name: name };
+            $.ajax({
+                url: '/Home/AddAlbum',
+                dataType: 'json',
+                contentType: 'application/json',
+                method: 'POST',
+                data: JSON.stringify(album)
+            }).done(function (data) {
+                console.log(data);
+                var html = loadAlbumItem(data);
+                $("#albumTable").append(html);
+            }).error(function (error) {
+                console.log(error);
+            });
+        }
+
+        function loadAlbumItem(album) {
+            var nameHtml = '<td width="50%" albumName><a class="btn btn-success" style="width:100%" href=# album-id="' + album.Id + '">' + album.Name + '</a></td>';
+            var editHtml = '<td width="25%" edit><a class="btn btn-default" style="width:100%" href=# edit-id = "' + album.Id + '">Edit</a></td>';
+            var delHtml = '<td width="25%" del><a class="btn btn-danger" style="width:100%" href=# delete-id = "' + album.Id + '">Delete</a></td>';
+            var html = '<tr album-row='+ album.Id+'>' + nameHtml + editHtml + delHtml + '</tr>';
+            return html;
+        }
+
+        function upload(albumId) {
+            console.log("Pictures can be added now");
+            $('.progress').show();
+            $('#fileupload').fileupload({
+                formData: { albumId: albumId },
+                dataType: 'json',
+                url: '/Home/AddPictures',
+                autoUpload: true,
+                done: function (e, data) {
+                    var picList = data.result;
+                    console.log(picList);
+                    $.each(picList, function (idx, picture) {
+                        console.log(picture);
+                        loadPic(picture);
+                    });
+                    $('.progress').hide();
+                }
+            }).on('fileuploadprogressall', function (e, data) {
+
+                var progress = parseInt(data.loaded / data.total * 100, 10);
+                $('.progress .progress-bar').css('width', progress + '%');
+            });
+
+        }
+
+        $("#albumTable").on("click", "a[album-id]", function () {
+            console.log("Click from: " + $(this).text());
+            var album = {
+                Id: $(this).attr("album-id"),
+                Name: $(this).text()
+            }
+            loadAlbum(album);
+            $("uploadPicForm").show();
+            $("#addPic a").show();
+
+        });
+
+        $("#albumTable").on("click", "a[delete-id]", function () {
+            var id = $(this).attr("delete-id");
+            var album = { Id: id };
+            $.ajax({
+                url: '/Home/DeleteAlbum',
+                contentType: 'application/json',
+                method: 'POST',
+                data: JSON.stringify(album)
+            }).done(function () {
+                $("#albumTable").find('tr[album-row="' + album.Id + '"]').remove();
+
+            }).error(function (er) {
+                console.log(er);
+            });
+
+        });
+
+        $("#albumTable").on("click", "a[edit-id]", function () {
+            console.log("Click from: " + $(this).text());
+            var id = $(this).attr("edit-id");
+            
+            var row = $("tr[album-row=" + id + "]");
+            var details = row.children("td");
+
+            details.hide();
+            var form;
+            if (!row.find("form").length) {
+                console.log("Appending Form to Row");
+                var textInput = '<input class="form-control" name="albumName" type="text" style="width:45%;margin:2px;"/>';
+                var submitInput = '<input style="width:25%;margin:2px;" type="submit" class="btn btn-primary" value="Submit" />';
+                var cancelInput = '<input type="button" class="btn btn-default" value="Cancel" style="width:25%;margin:2px;"/>';
+                form = '<form class="form-inline" edit-album-form-id="' + id + '" name="editAlbumForm">' + textInput + submitInput + cancelInput + '</form>';
+                row.prepend(form);
+            }
+
+            form = row.children("form");
+            EditAlbumEventHandlers();
+            var existingAlbumName = row.find("a[album-id]").text();
+            form.children("input[name='albumName']").val(existingAlbumName);
+            form.show();
+            
+        });
+
+        function EditAlbumEventHandlers() {
+
+            $("form[edit-album-form-id]").on("click", "input[type='button']", function () {
+                $(this).parent().hide();
+                $(this).parent().siblings("td").show();
+            });
+
+            $("form[edit-album-form-id]").submit(function () {
+                var form = $(this);
+
+                var newAlbumName = form.children("input[name='albumName']").val();
+
+                var request = {
+                    Id: form.attr("edit-album-form-id"),
+                    Name: newAlbumName
+                }
+                console.log("The edited album is ", request);
+
+                $.ajax({
+                    url: '/Home/EditAlbumName',
+                    contentType: 'application/json',
+                    data: JSON.stringify(request),
+                    method: 'POST'
+                }).done(function () {
+                    console.log("Name Edit Succesful");
+                    form.hide();
+                    form.siblings("td").children("a[album-id]").text(request.Name);
+                    form.siblings("td").show();
+
+                }).error(function (error) {
+                    console.log(error);
+                });
+                return false;
+            });
+        }
+
+        $("#fileupload").on("click", function () {
+            console.log("Click from: " + $(this).text())
+            var albumId = $("#fileupload").attr("upload-id");
+            console.log(albumId);
+            upload(albumId);
+        });
+
+        function loadPic(pic) {
+            var imgData = "data:image/jpeg;base64," + pic.Content;
+            var html = '<a id="' + pic.Id + '" href="' + imgData + '" title="' + pic.Name + '" name="' + pic.Location + '" data-gallery>' + '<img height=100 width = auto src="' + imgData + '" alt="' + pic.Name + '"></a>';
+            $("#links").append(html);
+        }
+
+        function loadAlbum(album) {
+            $("#uploadPicForm input").attr("upload-id", album.Id);
+            $("#uploadPicForm").show();
+            $.ajax({
+                url: '/Home/AlbumContents',
+                dataType: 'json',
+                contentType: 'json',
+                data: album,
+                method: 'GET'
+            }).done(function (pictures) {
+                console.log(pictures);
+                $("#albumHeading").text(album.Name);
+                if (pictures == null) {
+                    $("#links").html("");
+                } else {
+
+                    $.each(pictures, function (idx, picture) {
+                        loadPic(picture);
+                    });
+                }
+            }).error(function (error) {
+                console.log(error);
+            });
+        }
+
+        function picNameEditForm(element) {
+            element.hide();
+            var html = '<div id="editPicName" hidden> <input pic-id="' + + '" type="text" ><a class="btn btn-primary">Submit</a></div>'
+
+        }
+
+        function loadPicNameEditForm(element) {
+            console.log("Pic Name FOrm was here");
+            var id = element.attr("id");
+            console.log(element);
+            $(element).hide();
+            $(element.siblings("form")).attr("id", id);
+            $(element.siblings("form")).show();
+        }
+
+        $("form[name-form-id]").submit(function () {
+
+            var name = $(this).children("#field").val();
+            var id = $(this).children("#field").attr("id");
+            var pic = {
+                Id: id,
+                Name: name
+            };
+
+            $.ajax({
+                url: '/Home/EditPicture',
+                dataType: 'json',
+                data: pic,
+                method: 'POST'
+            }).done(function () {
+                $(this.hide());
+                $(element.siblings("form")).text(name);
+                $(element.siblings("h")).show();
+
+            }).error(function (error) {
+                console.log(error);
+            });
+        });
+
+        function editPic(element) {
+            console.log("Pic Name Form will be here");
+            console.log(element);
+            loadPicNameEditForm(element);
+        }
+    </script>
+}

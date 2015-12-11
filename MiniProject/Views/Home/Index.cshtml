@@ -1,38 +1,25 @@
-﻿<h2 class="text-center">Picture Album</h2>
-<div class="container">
-    <div class="col-md-4" style="background-color: lightsteelblue;">
-        <table id="albumTable" style="width:100%;" class="table table-responsive table-condensed text-center">  
-                <tr >
-                    <th class="text-center" colspan="3">List of Albums</th>
-                    <th style="padding:0px"></th>
-                    <th style="padding:0px"></th>
-                </tr>
-        </table>
+﻿<h2 class="text-center"><a style="text-decoration:none;color:olive;" href="/Home/Index">Picture Album</a></h2>
+<hr />
+<div class="container" album-contents-id>
+    <div class="col-md-4" style="background-color:palegoldenrod;border-radius:8px; height:100%;padding:2px;">
         <div>
-            <h4>Add Album</h4>
-            <form id="addAlbumForm" class="form-inline text-center" style="margin:8px">
-                <input id="albumName" type="text" class="form-control" style="width:70%"/>
-                <input type="submit" class="btn btn-primary" value="Submit" style="width:25%" />
+            <h4 class="text-center" style="color:olive">List of Albums</h4>
+            <ul id="albumList" style="list-style-type: none;padding:2px; margin:0;width:100%" class="text-center"></ul>
+        </div>
+        <hr />
+        <div>
+            <h5 class="text-center forn" style="color:olive">Add Album</h5>
+            <form id="addAlbumForm" style="margin-bottom:2%;text-align:center">
+                <input id="albumName" type="text" class="form-control" style="display: inline-block" />
+                <input type="submit" class="btn btn-primary text-center" value="Add" />
             </form>
         </div>
     </div>
-    <div class="col-md-8 text-center" style="overflow:auto;">
-        <div id="uploadPicForm" hidden style="float:right">
-            <span class="btn btn-success fileinput-button">
-                <i class="glyphicon glyphicon-plus"></i>
-                <span>Add Images</span>
-                <input id="fileupload" type="file" name="files[]" multiple accept="image/*">
-            </span>
-            <br />
-            <div class="progress" hidden>
-                <div class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: 0%;">
-                    <span class="sr-only">0% complete</span>
-                </div>
-            </div>
-        </div>
-        <h3 id="albumHeading" class="text-center"></h3>
-        
+
+    <div class="col-md-8 text-center" style="overflow:visible;">
+        <h3 id="albumHeading" class="text-center" style="margin-top:0px;color:olive"></h3>
         <br />
+
         <div class="container">
             <div id="links" />
         </div>
@@ -53,14 +40,19 @@
                     <div class="modal-content">
                         <div class="modal-header text-center">
                             <button type="button" class="close" aria-hidden="true">&times;</button>
-                            <h4 class="modal-title" name="name"></h4>
-                            <form name="name" hidden class="form-horizontal">
+                            <h3 class="modal-title" name="name"></h3>
+                            <h5 name="location" class="location-heading" style="clear:both"></h5>
+                            <form name="picture" hidden class="form-group text-center">
+                                <label for="text-field">Name</label>
                                 <input type="text" id="text-field" />
+                                <label for="text-location">Location</label>
+                                <input type="text" id="text-location"/>
                                 <input type="submit" class="btn-primary" />
                             </form>
-                            <h5 name="location" class="location-heading"></h5>
-
+                            <a class="glyphicon glyphicon-floppy-remove" href="#" style="margin-right:10px" data-toggle="tooltip" title="Delete"></a>
+                            <a class="glyphicon glyphicon-edit text-center" href="#" data-toggle="tooltip" title="Edit"></a>
                         </div>
+
                         <div class="modal-body next"></div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-default pull-left prev">
@@ -76,47 +68,100 @@
                 </div>
             </div>
         </div>
+        <br />
+        <div id="uploadPicForm" hidden class="text-center">
+            <span class="btn btn-success fileinput-button">
+                <i class="glyphicon glyphicon-plus"></i>
+                <span>Add Images</span>
+                <input id="fileupload" type="file" name="files[]" multiple accept="image/*">
+            </span>
+            <br />
+            <div class="progress" hidden>
+                <div class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: 0%;">
+                    <span class="sr-only">0% complete</span>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 @section scripts{
     <script>
+        var lat, lng, address;
 
-
-        $('body').on("click", ":header[header-id]", function () {
+        $('body').on("click", ".glyphicon-edit", function () {
             //console.log("Click!", $(this).attr("header-id"));
-            var id = $(this).attr("header-id");
+
+            var nameHeader = $(this).siblings(":header[header-id]");
+            var locationHeader = $(this).siblings(":header[name='location']");
+            var id = nameHeader.attr("header-id");
+            nameHeader.hide();
+            locationHeader.hide();
             $(this).hide();
-            var form = $(this).siblings("form[name='name']");
+            var form = $(this).siblings("form[name='picture']");
             form.attr("name-form-id", id);
-            form.children("#text-field").attr("value", $(this).text());
+            form.children("#text-field").attr("value", nameHeader.text());
+            form.children("#text-location").attr("value", locationHeader.text());
             form.show();
             form.on("submit", function () {
                 console.log("Submit!");
-                submitNameForm(id, form.children("#text-field").val());
+                var pic = {
+                    Id: id,
+                    Location: form.children("#text-location").val(),
+                    Name: form.children("#text-field").val()
+                }
+
+                submitNameForm(pic);
                 return false;
             });
         });
 
-        function submitNameForm(id, name) {
+        $('body').on("click", ".glyphicon-floppy-remove", function () {
+            //console.log("Click!", $(this).attr("header-id"));
 
-            var pic = {
-                Name: name,
-                Id: id
+            var nameHeader = $(this).siblings(":header[header-id]");
+            var id = nameHeader.attr("header-id");
+            var r = confirm("Are you sure you want to delete this picture?");
+            if (r == true) {
+                deletePicture(id);
+            } else {
+                return false;
             }
 
-            console.log("The new name is, ", name);
+        });
+
+        function deletePicture(id) {
+            var pic = { Id: id };
+            $.ajax({
+                url: '/Home/DeletePicture',
+                method: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(pic)
+            }).done(function () {
+                $(".close").click();
+                albumId = $("li[isselected='true']").attr('album-row');
+                var album = { Id: albumId };
+                loadAlbum(album);
+            })
+        }
+
+        function submitNameForm(pic) {
+            console.log("The new name is, ", pic.Name);
 
             $.ajax({
-                url: '/Home/EditPictureName',
+                url: '/Home/EditPicture',
                 contentType: 'application/json',
                 method: 'post',
                 data: JSON.stringify(pic)
             }).done(function () {
-                var form = $('form[name-form-id="' + id + '"]').hide();
-                var header = form.siblings(":header[name='name']");
-                header.text(name);
-                console.log("Header text is ", header.text());
-                header.show();
+                var form = $('form[name-form-id="' + pic.Id + '"]').hide();
+                var nameHeader = form.siblings(":header[name='name']");
+                var locationHeader = form.siblings(":header[name='location']")
+                nameHeader.text(pic.Name);
+                locationHeader.text(pic.Location);
+                //console.log("Header text is ", header.text());
+                nameHeader.show();
+                locationHeader.show();
+                nameHeader.siblings(".glyphicon-edit").show();
                 return false;
             }).error(function (error) {
                 console.log(error);
@@ -132,7 +177,7 @@
                 console.log(albums);
                 $.each(albums, function (idx, album) {
                     var html = loadAlbumItem(album);
-                    $("#albumTable").append(html);
+                    $("#albumList").append(html);
                 });
             }).error(function (error) {
                 console.log(error);
@@ -161,25 +206,32 @@
             }).done(function (data) {
                 console.log(data);
                 var html = loadAlbumItem(data);
-                $("#albumTable").append(html);
+                $("#albumList").append(html);
             }).error(function (error) {
                 console.log(error);
             });
         }
 
         function loadAlbumItem(album) {
-            var nameHtml = '<td width="50%" albumName><a class="btn btn-success" style="width:100%" href=# album-id="' + album.Id + '">' + album.Name + '</a></td>';
-            var editHtml = '<td width="25%" edit><a class="btn btn-default" style="width:100%" href=# edit-id = "' + album.Id + '">Edit</a></td>';
-            var delHtml = '<td width="25%" del><a class="btn btn-danger" style="width:100%" href=# delete-id = "' + album.Id + '">Delete</a></td>';
-            var html = '<tr album-row='+ album.Id+'>' + nameHtml + editHtml + delHtml + '</tr>';
+            var nameHtml = '<a class="btn btn-success" style="width:48%;margin:1%;overflow:hidden" href=# album-id="' + album.Id + '">' + album.Name + '</a>';
+            var editHtml = '<a class="btn btn-default" style="width:23%;margin:1%;overflow:hidden" href=# edit-id = "' + album.Id + '">Edit</a>';
+            var delHtml = '<a class="btn btn-danger" style="width:23%;margin:1%;overflow:hidden" href=# delete-id = "' + album.Id + '">Delete</a>';
+            var html = '<li style="width:99%;margin:2px;border-radius:2px" album-row="' + album.Id + '">' + nameHtml + editHtml + delHtml + '</li>';
+
             return html;
         }
 
         function upload(albumId) {
-            console.log("Pictures can be added now");
+            var pic = {
+                AlbumId: albumId,
+                Location: address
+            };
+
+            console.log("The pic to be added is", pic);
             $('.progress').show();
+
             $('#fileupload').fileupload({
-                formData: { albumId: albumId },
+                formData: pic,
                 dataType: 'json',
                 url: '/Home/AddPictures',
                 autoUpload: true,
@@ -200,41 +252,53 @@
 
         }
 
-        $("#albumTable").on("click", "a[album-id]", function () {
+        $("#albumList").on("click", "a[album-id]", function () {
             console.log("Click from: " + $(this).text());
+
+            var id = $(this).attr("album-id");
             var album = {
-                Id: $(this).attr("album-id"),
+                Id: id,
                 Name: $(this).text()
             }
+            console.log("Loading the album: ", album )
             loadAlbum(album);
-            $("uploadPicForm").show();
-            $("#addPic a").show();
-
+            
         });
 
-        $("#albumTable").on("click", "a[delete-id]", function () {
+        $("#albumList").on("click", "a[delete-id]", function () {
             var id = $(this).attr("delete-id");
-            var album = { Id: id };
-            $.ajax({
-                url: '/Home/DeleteAlbum',
-                contentType: 'application/json',
-                method: 'POST',
-                data: JSON.stringify(album)
-            }).done(function () {
-                $("#albumTable").find('tr[album-row="' + album.Id + '"]').remove();
+            var r = confirm("Are you sure you want to delete this album?");
+            if (r == true) {
+                console.log("Deleting album with id: " + id);
+                var album = { Id: id };
+                $.ajax({
+                    url: '/Home/DeleteAlbum',
+                    contentType: 'application/json',
+                    method: 'POST',
+                    data: JSON.stringify(album)
+                }).done(function () {
+                    $("#albumList").find('li[album-row="' + album.Id + '"]').remove();
 
-            }).error(function (er) {
-                console.log(er);
-            });
-
+                    if ($("div[album-contents-id]").attr("album-contents-id") == album.Id) {
+                        $("#albumHeading").text("");
+                        $("#links").html("");
+                        $("#uploadPicForm").hide();
+                        $("#albumList:first-child").children("a[album-id]").click();
+                    }
+                }).error(function (er) {
+                    console.log(er);
+                });
+            } else {
+                return false;
+            }
         });
 
-        $("#albumTable").on("click", "a[edit-id]", function () {
+        $("#albumList").on("click", "a[edit-id]", function () {
             console.log("Click from: " + $(this).text());
             var id = $(this).attr("edit-id");
-            
-            var row = $("tr[album-row=" + id + "]");
-            var details = row.children("td");
+
+            var row = $("li[album-row=" + id + "]");
+            var details = row.children();
 
             details.hide();
             var form;
@@ -252,14 +316,14 @@
             var existingAlbumName = row.find("a[album-id]").text();
             form.children("input[name='albumName']").val(existingAlbumName);
             form.show();
-            
+
         });
 
         function EditAlbumEventHandlers() {
 
             $("form[edit-album-form-id]").on("click", "input[type='button']", function () {
                 $(this).parent().hide();
-                $(this).parent().siblings("td").show();
+                $(this).parent().siblings().show();
             });
 
             $("form[edit-album-form-id]").submit(function () {
@@ -281,8 +345,12 @@
                 }).done(function () {
                     console.log("Name Edit Succesful");
                     form.hide();
-                    form.siblings("td").children("a[album-id]").text(request.Name);
-                    form.siblings("td").show();
+                    form.siblings("a[album-id]").text(request.Name);
+                    form.siblings().show();
+
+                    if ($("div[album-contents-id]").attr("album-contents-id") == request.Id) {
+                        $("#albumHeading").text(request.Name);
+                    }
 
                 }).error(function (error) {
                     console.log(error);
@@ -294,6 +362,7 @@
         $("#fileupload").on("click", function () {
             console.log("Click from: " + $(this).text())
             var albumId = $("#fileupload").attr("upload-id");
+
             console.log(albumId);
             upload(albumId);
         });
@@ -310,20 +379,26 @@
             $.ajax({
                 url: '/Home/AlbumContents',
                 dataType: 'json',
-                contentType: 'json',
+                contentType: 'application/json',
                 data: album,
                 method: 'GET'
             }).done(function (pictures) {
                 console.log(pictures);
+                $("#links").html("");
                 $("#albumHeading").text(album.Name);
-                if (pictures == null) {
-                    $("#links").html("");
-                } else {
-
+                if (pictures != null) {
                     $.each(pictures, function (idx, picture) {
                         loadPic(picture);
                     });
                 }
+                var id = album.Id;
+                $("uploadPicForm").show();
+                $("#addPic a").show();
+                $("div[album-contents-id]").attr("album-contents-id", id);
+                $("li[album-row]").css("background-color", "lightgray");
+                $("li[album-row='" + id + "']").css("background-color", "white");
+                $("li[album-row]").attr("isSelected", "false");
+                $("li[album-row='" + id + "']").attr("isSelected", "true");
             }).error(function (error) {
                 console.log(error);
             });
@@ -373,5 +448,42 @@
             console.log(element);
             loadPicNameEditForm(element);
         }
+
+        function getAddressFromCoord() {
+            $.ajax({
+                url: 'https://maps.googleapis.com/maps/api/geocode/json?latlng=' + lat + ',' + lng + '&key=AIzaSyB891RJkcBBodk-aiQoXo0wjWLzOY06WU0&result_type=administrative_area_level_2',
+                dataType: 'json',
+                method: 'get'
+            }).done(function (data) {
+                address = data.results[0].formatted_address;
+            }).error(function (er) {
+                console.log(er);
+            });
+        }
+
+        var options = {
+            enableHighAccuracy: true,
+            timeout: 5000,
+            maximumAge: 0
+        };
+
+        function success(pos) {
+            var crd = pos.coords;
+            console.log('Your current position is:');
+            console.log('Latitude : ' + crd.latitude);
+            console.log('Longitude: ' + crd.longitude);
+            console.log('More or less ' + crd.accuracy + ' meters.');
+            lat = crd.latitude;
+            lng = crd.longitude;
+            getAddressFromCoord();
+        };
+
+        function error(err) {
+            console.warn('ERROR(' + err.code + '): ' + err.message);
+        };
+
+        navigator.geolocation.getCurrentPosition(success, error, options);
+
+
     </script>
 }

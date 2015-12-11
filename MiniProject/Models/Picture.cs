@@ -28,9 +28,11 @@ namespace MiniProject.Models
         public string Location { get; set; }
 
         public bool IsFavourite { get; set;}
-        public int? Album { get; set; }
+        public virtual Album Album { get; set; }
         public string ContentType { get; set; }
         public byte[] Content { get; set; }
         public int ContentLength { get; set; }
+
+        public int AlbumId { get; set; }
     }
 }

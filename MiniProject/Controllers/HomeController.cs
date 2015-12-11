@@ -23,47 +23,96 @@ namespace MiniProject.Controllers
         }
 
         [HttpPost]
-        public ActionResult EditPictureName(Picture pic)
+        public ActionResult DeletePicture(Picture pic)
         {
-            int id = pic.Id;
-            string name = pic.Name;
-            db.Pictures.First(x => x.Id==id).Name = name;
-            db.SaveChanges();
-            return new HttpStatusCodeResult(HttpStatusCode.OK);
+            if (pic.Id >= 0)
+            {
+                var picture = db.Pictures.FirstOrDefault(x => x.Id == pic.Id);
+                db.Pictures.Remove(picture);
+                db.SaveChanges();
+                return new HttpStatusCodeResult(HttpStatusCode.OK);
+            }
+            return new HttpStatusCodeResult(HttpStatusCode.BadRequest, "Invalid Id");
+        }
+
+        [HttpPost]
+        public ActionResult EditPicture(Picture pic)
+        {
+            if (pic.Id > 0 && !string.IsNullOrWhiteSpace(pic.Name))
+            {
+                int id = pic.Id;
+                string name = pic.Name;
+                string location = pic.Location;
+                db.Pictures.First(x => x.Id == id).Name = name;
+                db.Pictures.First(x => x.Id == id).Location = location;
+                db.SaveChanges();
+                return new HttpStatusCodeResult(HttpStatusCode.OK);
+            }
+            else
+            {
+                return new HttpStatusCodeResult(HttpStatusCode.BadRequest, "Please verify the Id and Name");
+            }
         }
 
         [HttpGet]
         public ActionResult Albums()
         {
             var albumList = db.Albums.ToList();
-            return Content(JsonConvert.SerializeObject(albumList), "application/json");
+            return Content(JsonConvert.SerializeObject(albumList, new JsonSerializerSettings
+            {
+                ReferenceLoopHandling = ReferenceLoopHandling.Ignore
+            }), "application/json");
         }
 
         [HttpPost]
         public ActionResult DeleteAlbum(Album request)
         {
-            Album album = db.Albums.FirstOrDefault(x => x.Id == request.Id);
-            db.Albums.Remove(album);
-            db.SaveChanges();
-            return new HttpStatusCodeResult(HttpStatusCode.OK);
+            if (request.Id > 0)
+            {
+                Album album = db.Albums.FirstOrDefault(x => x.Id == request.Id);
+                db.Albums.Remove(album);
+                db.SaveChanges();
+                return new HttpStatusCodeResult(HttpStatusCode.OK);
+            }
+            else
+            {
+                return new HttpStatusCodeResult(HttpStatusCode.BadRequest, "The Id is invalid");
+            }
         }
 
         [HttpPost]
         public ActionResult EditAlbumName(Album album)
         {
-            int id = album.Id;
-            string newName = album.Name;
+            if (album.Id > 0 && !string.IsNullOrWhiteSpace(album.Name))
+            {
+                int id = album.Id;
+                string newName = album.Name;
 
-            db.Albums.FirstOrDefault(x => x.Id == id).Name = newName;
-            db.SaveChanges();
+                db.Albums.FirstOrDefault(x => x.Id == id).Name = newName;
+                db.SaveChanges();
 
-            return new HttpStatusCodeResult(HttpStatusCode.OK);
+                return new HttpStatusCodeResult(HttpStatusCode.OK);
+            }
+            else
+            {
+                return new HttpStatusCodeResult(HttpStatusCode.BadRequest, "Please verify the Id and Name");
+            }
         }
 
         [HttpGet]
         public ActionResult AlbumContents(Album album)
         {
-            return Content(JsonConvert.SerializeObject(db.Albums.First(x => x.Id == album.Id).Pictures), "application/json");
+            if (album.Id > 0)
+            {
+                return Content(JsonConvert.SerializeObject(db.Albums.First(x => x.Id == album.Id).Pictures, new JsonSerializerSettings
+                {
+                    ReferenceLoopHandling = ReferenceLoopHandling.Ignore
+                }), "application/json");
+            }
+            else
+            {
+                return new HttpStatusCodeResult(HttpStatusCode.BadRequest, "Please verify the Id and try again");
+            }
         }
 
         [HttpPost]
@@ -76,23 +125,26 @@ namespace MiniProject.Controllers
                 album = db.Albums.Add(album);
                 db.SaveChanges();
                 var id = album.Id;
-                var result = db.Albums.First(x=>x.Id==id);
-                return Json(result);
+                var result = db.Albums.First(x => x.Id == id);
+                return Content(JsonConvert.SerializeObject(result, new JsonSerializerSettings
+                {
+                    ReferenceLoopHandling = ReferenceLoopHandling.Ignore
+                }), "application/json");
             }
             return new HttpStatusCodeResult(HttpStatusCode.BadRequest, "Album has no name");
         }
 
         [HttpPost]
-        public ActionResult AddPictures(int albumId)
+        public ActionResult AddPictures(Picture picture)
         {
             var picList = new List<Picture>();
             int i = 0;
             foreach (string file in Request.Files)
-            {       
+            {
                 HttpPostedFileBase upload = Request.Files[file] as HttpPostedFileBase;
 
                 if (upload == null || upload.ContentLength == 0) return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
-               
+
                 if (upload != null && upload.ContentLength > 0)
                 {
                     try
@@ -106,13 +158,16 @@ namespace MiniProject.Controllers
                         {
                             pic.Content = reader.ReadBytes(upload.ContentLength);
                         }
-                        
+
                         pic.ContentLength = upload.ContentLength;
-                        pic.Album = albumId;
+
+                        var album = db.Albums.Find(picture.AlbumId);
+                        pic.Album = album;
+                        pic.Location = picture.Location;
                         db.Pictures.Add(pic);
-                        db.Albums.Find(albumId).Pictures.Add(pic);
+                        album.Pictures.Add(pic);
+                        db.SaveChanges();
                         picList.Add(pic);
-                        db.SaveChangesAsync();
                     }
                     catch (IOException e)
                     {
@@ -125,7 +180,10 @@ namespace MiniProject.Controllers
                 }
                 i++;
             }
-            return Content(JsonConvert.SerializeObject(picList), "application/json"); 
+            return Content(JsonConvert.SerializeObject(picList, new JsonSerializerSettings
+            {
+                ReferenceLoopHandling = ReferenceLoopHandling.Ignore
+            }), "application/json");
         }
     }
 }

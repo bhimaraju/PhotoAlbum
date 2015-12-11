@@ -28,3 +28,9 @@ D:\MSIS\Fall\XML\Projects\MiniProject\MiniProject\bin\Antlr3.Runtime.pdb
 D:\MSIS\Fall\XML\Projects\MiniProject\MiniProject\bin\Newtonsoft.Json.xml
 D:\MSIS\Fall\XML\Projects\MiniProject\MiniProject\obj\Debug\MiniProject.dll
 D:\MSIS\Fall\XML\Projects\MiniProject\MiniProject\obj\Debug\MiniProject.pdb
+D:\MSIS\Fall\XML\Projects\MiniProject\MiniProject\bin\System.Web.Http.WebHost.dll
+D:\MSIS\Fall\XML\Projects\MiniProject\MiniProject\bin\System.Web.Http.dll
+D:\MSIS\Fall\XML\Projects\MiniProject\MiniProject\bin\System.Net.Http.Formatting.dll
+D:\MSIS\Fall\XML\Projects\MiniProject\MiniProject\bin\System.Web.Http.WebHost.xml
+D:\MSIS\Fall\XML\Projects\MiniProject\MiniProject\bin\System.Web.Http.xml
+D:\MSIS\Fall\XML\Projects\MiniProject\MiniProject\bin\System.Net.Http.Formatting.xml

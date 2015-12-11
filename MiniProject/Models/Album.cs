@@ -23,5 +23,6 @@ namespace MiniProject.Models
         public String Name { get; set; }
         public Picture Thumbnail { get; set; }
         public virtual List<Picture> Pictures { get; set; }
+        
     }
 }

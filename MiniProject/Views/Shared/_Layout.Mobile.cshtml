@@ -11,8 +11,7 @@
 <body>
     <div class="container body-content">
         @RenderBody()
-        <hr />
-        
+        <hr /> 
     </div>
 
     @Scripts.Render("~/bundles/jquery")
@@ -20,12 +19,23 @@
     @Scripts.Render("~/bundles/jqueryblueimp")
     @Scripts.Render("~/bundles/bootstrap")
     @RenderSection("scripts", required: false)
-</body>
-<body>
+    <style>
+        .ui-mobile-viewport{
+            background-image:url("/Content/background.mobile.jpg");
+        }
+
+        .ui-page{
+    background:none;
+        }
+
+        .body-content{
+            padding:10px;
+        }
+    </style>
     <br />
-    <hr/>
+    <hr />
     <footer>
-        <p>&copy; @DateTime.Now.Year - Deepak Bhimaraju</p>
+        <p class="text-center">&copy; @DateTime.Now.Year - Deepak Bhimaraju</p>
     </footer>
 </body>
 </html>

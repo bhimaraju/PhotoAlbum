@@ -7,7 +7,7 @@ using System.Data.Entity.Migrations;
 
 namespace MiniProject.Models
 {
-        public class PictureAlbumDbConfiguration : DropCreateDatabaseAlways<PictureAlbumDbContext>
+        public class PictureAlbumDbConfiguration : DropCreateDatabaseIfModelChanges<PictureAlbumDbContext>
         {
             protected override void Seed(PictureAlbumDbContext context)
             {
